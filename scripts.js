@@ -115,3 +115,60 @@ const ModalManager = {
     this.form.reset();
   },
 
+  /**
+   * Handles the form submission
+   * @param {Event} e - The submit event
+   */
+  handleSubmit: function (e) {
+    e.preventDefault(); // Prevent default form submission to handle validation manually
+
+    const title = this.newTaskTitleInput.value.trim();
+
+    if (title === "") {
+      // Show the custom validation message only on submission if title is empty
+      this.titleValidationMessage.style.display = "block";
+      // Do NOT proceed with task creation
+      return;
+    } else {
+      // Hide the custom validation message if title is not empty
+      this.titleValidationMessage.style.display = "none";
+    }
+
+    // If we reach here, validation passed, proceed with task creation
+    const newTask = {
+      id: userTasks.reduce((maxId, task) => Math.max(maxId, task.id), 0) + 1,
+      title: title,
+      description: document.getElementById("new-task-description").value,
+      status: document.getElementById("new-task-status").value,
+      priority: document.getElementById("new-task-priority")?.value || "Medium",
+    };
+
+    TaskManager.addTask(newTask);
+    this.closeModal();
+  },
+};
+
+/**
+ * Theme Management Module
+ * Handles all operations related to theme switching
+ */
+const ThemeManager = {
+  themeSwitch: document.getElementById("theme-switch"),
+  mobileThemeSwitch: document.getElementById("mobile-theme-switch"),
+  logo: document.getElementById("logo"),
+  favicon: document.querySelector('link[rel="icon"]'),
+  logoMobile: document.querySelector(".logo-mobile"),
+
+  init: function () {
+    // Check for saved theme preference
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      document.documentElement.setAttribute("data-theme", savedTheme);
+      this.themeSwitch.checked = savedTheme === "dark";
+      if (this.mobileThemeSwitch)
+        this.mobileThemeSwitch.checked = savedTheme === "dark";
+      AssetManager.setAssetsForTheme(savedTheme);
+    } else {
+      AssetManager.setAssetsForTheme("light");
+    }
+
