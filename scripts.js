@@ -59,3 +59,59 @@ const TaskManager = {
     }
   },
 };
+
+/**
+ * Modal Management Module
+ * Handles all operations related to the Add Task modal
+ */
+const ModalManager = {
+  modal: document.getElementById("add-task-modal"),
+  form: document.getElementById("add-task-form"),
+  addTaskBtn: document.getElementById("add-task-btn"),
+  closeBtn: document.querySelector("#add-task-modal .close-modal-button"),
+  cancelBtn: document.querySelector("#add-task-modal .close-btn"),
+
+  /**
+   * Initializes the modal functionality
+   */
+  init: function () {
+    this.addTaskBtn.addEventListener("click", () => this.openModal());
+    this.closeBtn.addEventListener("click", () => this.closeModal());
+    this.modal.addEventListener("click", (e) => {
+      if (e.target === this.modal) this.closeModal();
+    });
+    this.form.addEventListener("submit", (e) => this.handleSubmit(e));
+
+    // Get references to input and message for validation
+    this.newTaskTitleInput = document.getElementById("new-task-title");
+    this.titleValidationMessage = document.getElementById(
+      "title-validation-message"
+    );
+
+    // Hide the validation message initially
+    this.titleValidationMessage.style.display = "none";
+
+    // Add an input event listener to hide the message when user starts typing
+    this.newTaskTitleInput.addEventListener("input", () => {
+      if (this.newTaskTitleInput.value.trim() !== "") {
+        this.titleValidationMessage.style.display = "none";
+      }
+    });
+  },
+
+  /**
+   * Opens the Add Task modal
+   */
+  openModal: function () {
+    this.modal.style.display = "flex";
+    document.getElementById("new-task-title").focus();
+  },
+
+  /**
+   * Closes the Add Task modal
+   */
+  closeModal: function () {
+    this.modal.style.display = "none";
+    this.form.reset();
+  },
+
