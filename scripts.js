@@ -578,3 +578,92 @@ function refreshTaskDisplay() {
   // Update column counts
   updateColumnCounts();
 }
+
+/**
+ * Updates the count of tasks in each column header
+ */
+function updateColumnCounts() {
+  const counts = {
+    todo: userTasks.filter((task) => task.status === "todo").length,
+    doing: userTasks.filter((task) => task.status === "doing").length,
+    done: userTasks.filter((task) => task.status === "done").length,
+  };
+
+  document.getElementById("toDoText").textContent = `TODO (${counts.todo})`;
+  document.getElementById("doingText").textContent = `DOING (${counts.doing})`;
+  document.getElementById("doneText").textContent = `DONE (${counts.done})`;
+}
+
+// Mobile sidebar modal logic
+function setupMobileSidebar() {
+  const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+  const logoMobileDark = document.getElementById("logo-mobile-dark");
+  const mobileSidebarModal = document.getElementById("mobile-sidebar-modal");
+  const mobileSidebarClose = document.querySelector(".mobile-sidebar-close");
+
+  function openSidebar() {
+    if (window.innerWidth <= 768) {
+      mobileSidebarModal.style.display = "flex";
+      // Theme toggles are now always in sync
+    }
+  }
+
+  if (mobileMenuBtn && mobileSidebarModal) {
+    mobileMenuBtn.addEventListener("click", openSidebar);
+  }
+  if (logoMobileDark && mobileSidebarModal) {
+    logoMobileDark.addEventListener("click", openSidebar);
+  }
+  if (mobileSidebarClose && mobileSidebarModal) {
+    mobileSidebarClose.addEventListener("click", function () {
+      mobileSidebarModal.style.display = "none";
+    });
+  }
+}
+
+// Initialize the theme and sidebar functionality
+document.addEventListener("DOMContentLoaded", async () => {
+  ModalManager.init();
+  ThemeManager.init();
+  SidebarManager.init();
+  setupMobileSidebar();
+  await initializeTasks();
+});
+
+const AssetManager = {
+  logo: document.getElementById("logo"),
+  favicon: document.querySelector('link[rel="icon"]'),
+  logoMobile: document.querySelector(".logo-mobile"),
+
+  setAssetsForTheme(theme) {
+    if (this.logo) {
+      this.logo.src =
+        theme === "dark" ? "./assets/logo-dark.svg" : "./assets/logo-light.svg";
+      this.logo.alt = theme === "dark" ? "logo-dark" : "logo-light";
+    }
+    if (this.favicon) {
+      this.favicon.href =
+        theme === "dark" ? "./assets/favicon (1).svg" : "./assets/favicon.svg";
+    }
+    if (this.logoMobile) {
+      this.logoMobile.src = "./assets/favicon (1).svg";
+      this.logoMobile.alt = "logo-mobile";
+    }
+  },
+};
+
+function updateMobileLogoForTheme() {
+  const logoImg = document.querySelector(".logo-mobile");
+  const logoSvg = document.getElementById("logo-mobile-dark");
+  if (!logoImg || !logoSvg) return;
+  if (
+    window.innerWidth <= 768 &&
+    document.documentElement.getAttribute("data-theme") === "dark"
+  ) {
+    logoImg.style.display = "none";
+    logoSvg.style.display = "block";
+  } else {
+    logoImg.style.display = "block";
+    logoSvg.style.display = "none";
+  }
+}
