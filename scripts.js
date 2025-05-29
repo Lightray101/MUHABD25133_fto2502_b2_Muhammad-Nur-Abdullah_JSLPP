@@ -667,3 +667,20 @@ function updateMobileLogoForTheme() {
     logoSvg.style.display = "none";
   }
 }
+
+// Update on theme change and resize
+window.addEventListener("resize", updateMobileLogoForTheme);
+const observer = new MutationObserver(updateMobileLogoForTheme);
+observer.observe(document.documentElement, {
+  attributes: true,
+  attributeFilter: ["data-theme"],
+});
+
+document.addEventListener("DOMContentLoaded", async () => {
+  ModalManager.init();
+  ThemeManager.init();
+  SidebarManager.init();
+  setupMobileSidebar();
+  updateMobileLogoForTheme();
+  await initializeTasks();
+});
