@@ -305,3 +305,276 @@ function showError(msg) {
     if (errorDiv) errorDiv.style.display = "none";
   }, 4000);
 }
+
+// Main app initialization
+async function initializeTasks() {
+  let tasks = StorageManager.getTasks();
+  if (!tasks || tasks.length === 0) {
+    // Try fetching from API
+    const apiTasks = await ApiManager.fetchTasks();
+    if (apiTasks && Array.isArray(apiTasks)) {
+      tasks = apiTasks.map((t, i) => ({
+        id: t.id || i + 1,
+        title: t.title || "",
+        description: t.description || "",
+        status: t.status || "todo",
+        priority: t.priority || "Medium",
+      }));
+      StorageManager.saveTasks(tasks);
+    }
+  }
+  userTasks = tasks;
+  refreshTaskDisplay();
+}
+
+// Initialize tasks from local storage or use default tasks
+let userTasks =
+  StorageManager.getTasks().length > 0
+    ? StorageManager.getTasks()
+    : [
+        {
+          id: 1,
+          title: "Launch Epic Career 🚀",
+          description: "Create a killer Resume",
+          status: "todo",
+          priority: "High",
+        },
+        {
+          id: 2,
+          title: "Conquer React⚛️",
+          description: "Learn the basics of React.",
+          status: "todo",
+          priority: "High",
+        },
+        {
+          id: 3,
+          title: "Understand Databases⚙️",
+          description: "Study database concepts.",
+          status: "todo",
+          priority: "Medium",
+        },
+        {
+          id: 4,
+          title: "Crush Frameworks🖼️",
+          description: "Explore various frameworks.",
+          status: "todo",
+          priority: "Low",
+        },
+        {
+          id: 5,
+          title: "Master JavaScript 💛",
+          description: "Get comfortable with the fundamentals.",
+          status: "doing",
+          priority: "High",
+        },
+        {
+          id: 6,
+          title: "Never Give Up 🏆",
+          description: "Keep pushing forward!",
+          status: "doing",
+          priority: "Medium",
+        },
+        {
+          id: 7,
+          title: "Explore ES6 Features 🚀",
+          description: "Deep dive into ES6.",
+          status: "done",
+          priority: "Medium",
+        },
+        {
+          id: 8,
+          title: "Have fun 🥳",
+          description: "Enjoy the process!",
+          status: "done",
+          priority: "Low",
+        },
+      ];
+
+// Save initial tasks to local storage if none exist
+if (StorageManager.getTasks().length === 0) {
+  StorageManager.saveTasks(userTasks);
+}
+
+// Function to filter completed tasks
+function getCompletedTasks(arr) {
+  return arr.filter((task) => task.status === "done");
+}
+
+// Log all user-created tasks as an array
+console.log("All tasks:", userTasks);
+
+// Log only completed tasks as an array
+console.log("Completed tasks:", getCompletedTasks(userTasks));
+
+// DOM Elements
+const taskColumns = {
+  todo: document.querySelector('[data-status="todo"] .tasks-container'),
+  doing: document.querySelector('[data-status="doing"] .tasks-container'),
+  done: document.querySelector('[data-status="done"] .tasks-container'),
+};
+/**
+ * Creates a task element with the given task data
+ * @param {Object} task - The task object containing id, title, description, and status
+ * @returns {HTMLElement} The created task element
+ */
+function createTaskElement(task) {
+  const taskElement = document.createElement("div");
+  taskElement.className = "task-div";
+  taskElement.dataset.taskId = task.id;
+
+  // Task title
+  const titleSpan = document.createElement("span");
+  titleSpan.textContent = task.title;
+  taskElement.appendChild(titleSpan);
+
+  // Priority orb (now on the right)
+  const orb = document.createElement("span");
+  const prioRaw = (task.priority || "Medium").trim().toLowerCase();
+  const prio = ["high", "medium", "low"].includes(prioRaw) ? prioRaw : "medium";
+  orb.className = `priority-orb priority-${prio}-orb`;
+  taskElement.appendChild(orb);
+
+  // Add click event to open modal
+  taskElement.addEventListener("click", () => openTaskModal(task));
+
+  return taskElement;
+}
+/**
+ * Opens the task modal with the given task data
+ * @param {Object} task - The task object to display in the modal
+ */
+function openTaskModal(task) {
+  // Create modal elements
+  const modal = document.createElement("div");
+  modal.className = "modal";
+
+  const modalContent = document.createElement("div");
+  modalContent.className = "modal-content";
+
+  // Create a header div for the title and close button
+  const modalHeader = document.createElement("div");
+  modalHeader.className = "modal-header";
+
+  // Create the modal title
+  const modalTitle = document.createElement("h2");
+  modalTitle.textContent = "Edit Task";
+
+  // Add a close button (X icon)
+  const closeButton = document.createElement("button");
+  closeButton.className = "close-modal-button";
+  closeButton.innerHTML = "&times;";
+
+  // Append title and close button to the header
+  modalHeader.appendChild(modalTitle);
+  modalHeader.appendChild(closeButton);
+
+  // Append the header to modal content
+  modalContent.appendChild(modalHeader);
+  // Create form elements
+  const form = document.createElement("form");
+  form.innerHTML = `
+    <div class="form-group">
+      <label for="task-title">Title</label>
+      <input type="text" id="task-title" value="${task.title}" required>
+    </div>
+    <div class="form-group">
+      <label for="task-description">Description</label>
+      <textarea id="task-description" required>${task.description}</textarea>
+    </div>
+    <div class="form-group">
+      <label for="task-status">Status</label>
+      <select id="task-status">
+        <option value="todo" ${
+          task.status === "todo" ? "selected" : ""
+        }>todo</option>
+        <option value="doing" ${
+          task.status === "doing" ? "selected" : ""
+        }>doing</option>
+        <option value="done" ${
+          task.status === "done" ? "selected" : ""
+        }>done</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="task-priority">Priority</label>
+      <select id="task-priority">
+        <option value="High" ${
+          task.priority === "High" ? "selected" : ""
+        }>High</option>
+        <option value="Medium" ${
+          task.priority === "Medium" ? "selected" : ""
+        }>Medium</option>
+        <option value="Low" ${
+          task.priority === "Low" ? "selected" : ""
+        }>Low</option>
+      </select>
+    </div>
+    <div class="modal-buttons">
+      <button type="submit" class="save-btn">Save Changes</button>
+      <button type="button" class="delete-btn">Delete Task</button>
+    </div>
+  `;
+
+  // Add form to modal content
+  modalContent.appendChild(form);
+
+  // Save changes on submit
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const updatedData = {
+      title: document.getElementById("task-title").value,
+      description: document.getElementById("task-description").value,
+      status: document.getElementById("task-status").value,
+      priority: document.getElementById("task-priority").value,
+    };
+    TaskManager.updateTask(task.id, updatedData);
+    modal.remove();
+  });
+
+  // Delete button logic
+  form.querySelector(".delete-btn").addEventListener("click", function () {
+    if (confirm("Are you sure you want to delete this task?")) {
+      TaskManager.deleteTask(task.id);
+      modal.remove();
+    }
+  });
+
+  // Add event listener to modal backdrop
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+
+  // Add event listener to the close button
+  closeButton.addEventListener("click", () => modal.remove());
+
+  // Add modal to DOM
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+}
+
+/**
+ * Refreshes the task display by clearing and repopulating all columns
+ */
+function refreshTaskDisplay() {
+  // Clear all columns
+  Object.values(taskColumns).forEach((column) => (column.innerHTML = ""));
+
+  // Sort and add tasks to appropriate columns
+  const priorityOrder = { High: 0, Medium: 1, Low: 2 };
+  ["todo", "doing", "done"].forEach((status) => {
+    const tasks = userTasks
+      .filter((task) => task.status === status)
+      .sort(
+        (a, b) =>
+          priorityOrder[a.priority || "Medium"] -
+          priorityOrder[b.priority || "Medium"]
+      );
+    tasks.forEach((task) => {
+      const taskElement = createTaskElement(task);
+      taskColumns[status].appendChild(taskElement);
+    });
+  });
+
+  // Update column counts
+  updateColumnCounts();
+}
