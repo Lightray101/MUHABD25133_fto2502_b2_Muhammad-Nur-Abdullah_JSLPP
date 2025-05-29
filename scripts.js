@@ -479,7 +479,7 @@ function openTaskModal(task) {
     </div>
     <div class="form-group">
       <label for="task-description">Description</label>
-      <textarea id="task-description" required>${task.description}</textarea>
+      <textarea id="task-description">${task.description}</textarea>
     </div>
     <div class="form-group">
       <label for="task-status">Status</label>
