@@ -172,3 +172,136 @@ const ThemeManager = {
       AssetManager.setAssetsForTheme("light");
     }
 
+    // Add event listeners for both toggles
+    if (this.themeSwitch) {
+      this.themeSwitch.addEventListener("change", () =>
+        this.toggleTheme(this.themeSwitch.checked)
+      );
+    }
+    if (this.mobileThemeSwitch) {
+      this.mobileThemeSwitch.addEventListener("change", () =>
+        this.toggleTheme(this.mobileThemeSwitch.checked)
+      );
+    }
+  },
+
+  toggleTheme: function (isDark) {
+    const newTheme = isDark ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
+    AssetManager.setAssetsForTheme(newTheme);
+    // Sync both toggles
+    if (this.themeSwitch) this.themeSwitch.checked = isDark;
+    if (this.mobileThemeSwitch) this.mobileThemeSwitch.checked = isDark;
+  },
+
+  setAssetsForTheme(theme) {
+    if (this.logo) {
+      this.logo.src =
+        theme === "dark" ? "./assets/logo-dark.svg" : "./assets/logo-light.svg";
+      this.logo.alt = theme === "dark" ? "logo-dark" : "logo-light";
+    }
+    if (this.favicon) {
+      this.favicon.href =
+        theme === "dark" ? "./assets/favicon (1).svg" : "./assets/favicon.svg";
+    }
+    if (this.logoMobile) {
+      this.logoMobile.src = "./assets/favicon (1).svg";
+      this.logoMobile.alt = "logo-mobile";
+    }
+  },
+};
+
+/**
+ * Sidebar Management Module
+ * Handles all operations related to sidebar visibility
+ */
+const SidebarManager = {
+  sidebar: document.getElementById("side-bar-div"),
+  layout: document.getElementById("layout"),
+  hideButton: document.querySelector(".hide-sidebar-btn"),
+  showButton: document.getElementById("show-sidebar-btn"),
+
+  init: function () {
+    // Check for saved sidebar state
+    const isHidden = localStorage.getItem("sidebarHidden") === "true";
+    if (isHidden) {
+      this.hideSidebar();
+    }
+
+    // Add event listeners
+    this.hideButton.addEventListener("click", () => this.hideSidebar());
+    this.showButton.addEventListener("click", () => this.showSidebar());
+  },
+
+  hideSidebar: function () {
+    this.sidebar.classList.add("hidden");
+    this.layout.classList.add("expanded");
+    this.showButton.style.display = "flex";
+    localStorage.setItem("sidebarHidden", "true");
+  },
+
+  showSidebar: function () {
+    this.sidebar.classList.remove("hidden");
+    this.layout.classList.remove("expanded");
+    this.showButton.style.display = "none";
+    localStorage.setItem("sidebarHidden", "false");
+  },
+};
+
+/**
+ * API Module
+ * Handles fetching tasks from the remote API
+ */
+const ApiManager = {
+  endpoint: "https://jsl-kanban-api.vercel.app/",
+  async fetchTasks() {
+    try {
+      showLoading();
+      const response = await fetch(this.endpoint);
+      if (!response.ok) throw new Error("Failed to fetch tasks");
+      const data = await response.json();
+      hideLoading();
+      return data;
+    } catch (error) {
+      showError("Error fetching tasks. Please try again later.");
+      hideLoading();
+      return null;
+    }
+  },
+};
+
+/**
+ * UI Loading/Error State
+ */
+function showLoading() {
+  let loadingDiv = document.getElementById("loading-message");
+  if (!loadingDiv) {
+    loadingDiv = document.createElement("div");
+    loadingDiv.id = "loading-message";
+    loadingDiv.textContent = "Loading tasks...";
+    loadingDiv.style.cssText =
+      "position:fixed;top:0;left:0;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.8);z-index:2000;font-size:1.5rem;";
+    document.body.appendChild(loadingDiv);
+  } else {
+    loadingDiv.style.display = "flex";
+  }
+}
+function hideLoading() {
+  const loadingDiv = document.getElementById("loading-message");
+  if (loadingDiv) loadingDiv.style.display = "none";
+}
+function showError(msg) {
+  let errorDiv = document.getElementById("error-message");
+  if (!errorDiv) {
+    errorDiv = document.createElement("div");
+    errorDiv.id = "error-message";
+    errorDiv.style.cssText =
+      "position:fixed;top:0;left:0;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;background:rgba(255,0,0,0.1);z-index:2100;font-size:1.2rem;color:#d32f2f;";
+    document.body.appendChild(errorDiv);
+  }
+  errorDiv.textContent = msg;
+  setTimeout(() => {
+    if (errorDiv) errorDiv.style.display = "none";
+  }, 4000);
+}
